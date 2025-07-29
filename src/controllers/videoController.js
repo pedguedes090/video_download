@@ -14,8 +14,8 @@ export class VideoController {
 
   // Helper method để tạo base URL từ request
   getBaseUrl(req) {
-    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
-    const host = req.get('host') || req.get('x-forwarded-host') || `localhost:${process.env.PORT || 3000}`;
+    const protocol = req.protocol || 'http';
+    const host = req.get('host') || `localhost:${process.env.PORT || 3000}`;
     return `${protocol}://${host}`;
   }
 

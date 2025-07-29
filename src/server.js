@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 7860;
 
 // Helper function to get current host
 const getBaseUrl = (req) => {
-  const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
-  const host = req.get('host') || req.get('x-forwarded-host') || `localhost:${PORT}`;
+  const protocol = req.protocol || 'http';
+  const host = req.get('host') || `localhost:${PORT}`;
   return `${protocol}://${host}`;
 };
 
