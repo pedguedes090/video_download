@@ -8,6 +8,7 @@ import { videoRoutes } from './routes/videoRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 7860;
 
 // Helper function to get current host
