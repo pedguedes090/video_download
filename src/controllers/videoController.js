@@ -1,4 +1,4 @@
-import { YtDlp } from 'ytdlp-nodejs';
+const ytDlp = new YTDlpWrap('/usr/bin/yt-dlp');
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
