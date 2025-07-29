@@ -1,0 +1,6 @@
+build:
+  command: npm run install-ffmpeg
+start:
+  command: npm start
+env:
+  NODE_ENV: production

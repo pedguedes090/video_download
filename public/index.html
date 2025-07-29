@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader - Tải Video Miễn Phí</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-download"></i>
+                <h1>VideoDownloader</h1>
+            </div>
+            <nav class="nav">
+                <a href="#home" class="nav-link active">Trang chủ</a>
+                <a href="#features" class="nav-link">Tính năng</a>
+                <a href="#api-docs" class="nav-link">API Docs</a>
+                <a href="#about" class="nav-link">Giới thiệu</a>
+            </nav>
+            <div class="header-controls">
+                <div class="theme-switcher">
+                    <button id="themeSwitcher" class="theme-btn" title="Chuyển theme">
+                        <i class="fas fa-palette"></i>
+                    </button>
+                    <div id="themeMenu" class="theme-menu hidden">
+                        <div class="theme-option" data-theme="default">
+                            <div class="theme-preview default-preview"></div>
+                            <span>Mặc định</span>
+                        </div>
+                        <div class="theme-option" data-theme="pink-milk">
+                            <div class="theme-preview pink-milk-preview"></div>
+                            <span>theme khác</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Mobile Menu Overlay -->
+        <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+            <div class="mobile-menu">
+                <div class="mobile-menu-header">
+                    <div class="logo">
+                        <i class="fas fa-download"></i>
+                        <span>VideoDownloader</span>
+                    </div>
+                    <button class="mobile-menu-close" id="mobileMenuClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <nav class="mobile-nav">
+                    <a href="#home" class="mobile-nav-link active">
+                        <i class="fas fa-home"></i>
+                        Trang chủ
+                    </a>
+                    <a href="#features" class="mobile-nav-link">
+                        <i class="fas fa-star"></i>
+                        Tính năng
+                    </a>
+                    <a href="#api-docs" class="mobile-nav-link">
+                        <i class="fas fa-code"></i>
+                        API Docs
+                    </a>
+                    <a href="#about" class="mobile-nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        Giới thiệu
+                    </a>
+                    <div class="mobile-theme-section">
+                        <div class="mobile-theme-label">
+                            <i class="fas fa-palette"></i>
+                            Chủ đề
+                        </div>
+                        <div class="mobile-theme-options">
+                            <button class="mobile-theme-btn" data-theme="default">
+                                <div class="mobile-theme-preview default-preview"></div>
+                                Mặc định
+                            </button>
+                            <button class="mobile-theme-btn" data-theme="pink-milk">
+                                <div class="mobile-theme-preview pink-milk-preview"></div>
+                                Hồng tươi sáng
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="hero-content">
+                <h2 class="hero-title">Tải Video Nhanh Chóng & Dễ Dàng</h2>
+                <p class="hero-subtitle">Hỗ trợ YouTube, TikTok, Facebook và nhiều platform khác. Miễn phí 100%!</p>
+                
+                <!-- Download Form -->
+                <div class="download-section">
+                    <div class="url-input-container">
+                        <input type="url" id="videoUrl" placeholder="Dán link video vào đây..." class="url-input">
+                        <button id="downloadBtn" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            Tải xuống
+                        </button>
+                    </div>
+                    
+                    <!-- Format Selection -->
+                    <div class="format-selection">
+                        <label>Chọn định dạng:</label>
+                        <div class="format-options">
+                            <label class="format-option">
+                                <input type="radio" name="format" value="mp4" checked>
+                                <span>MP4 (Video)</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="format" value="mp3">
+                                <span>MP3 (Audio)</span>
+                            </label>
+                            <label class="format-option">
+                                <input type="radio" name="format" value="best">
+                                <span>Chất lượng tốt nhất</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Messages -->
+                <div id="statusMessage" class="status-message hidden"></div>
+                
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="progress-container hidden">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <span id="progressText" class="progress-text">0%</span>
+                </div>
+
+                <!-- Download Result -->
+                <div id="downloadResult" class="download-result hidden">
+                    <div class="result-info">
+                        <img id="videoThumbnail" src="" alt="Video thumbnail" class="video-thumbnail">
+                        <div class="video-details">
+                            <h3 id="videoTitle" class="video-title"></h3>
+                            <p id="videoDuration" class="video-duration"></p>
+                            <a id="downloadLink" href="" download class="download-link">
+                                <i class="fas fa-download"></i>
+                                Tải xuống file
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Preview Section -->
+                    <div id="videoPreview" class="video-preview hidden">
+                        <h4 class="preview-title">
+                            <i class="fas fa-play-circle"></i>
+                            Xem trước video
+                        </h4>
+                        <div class="video-container">
+                            <video id="previewVideo" controls class="preview-video">
+                                <source id="videoSource" src="" type="video/mp4">
+                                Trình duyệt của bạn không hỗ trợ video HTML5.
+                            </video>
+                        </div>
+                        <div class="preview-controls">
+                            <button id="togglePreview" class="preview-btn">
+                                <i class="fas fa-eye"></i>
+                                Hiển thị preview
+                            </button>
+                            <button id="fullscreenBtn" class="preview-btn">
+                                <i class="fas fa-expand"></i>
+                                Toàn màn hình
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="section-content">
+                <h2 class="section-title">Tính Năng Nổi Bật</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>Tốc Độ Cao</h3>
+                        <p>Tải video với tốc độ nhanh nhất, không giới hạn băng thông</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>An Toàn 100%</h3>
+                        <p>Không lưu trữ dữ liệu cá nhân, bảo mật thông tin tuyệt đối</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Đa Nền Tảng</h3>
+                        <p>Hỗ trợ tất cả thiết bị: máy tính, điện thoại, tablet</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h3>Nhiều Platform</h3>
+                        <p>YouTube, TikTok, Facebook, Instagram và hàng trăm trang khác</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Documentation Section -->
+        <section class="api-docs" id="api-docs">
+            <div class="section-content">
+                <h2 class="section-title">API Documentation</h2>
+                <div class="api-content">
+                    <div class="api-endpoint">
+                        <h3>GET /api/video/info</h3>
+                        <p>Lấy thông tin video từ URL</p>
+                        <div class="code-block">
+                            <code>curl -X GET "http://localhost:3000/api/video/info?url=VIDEO_URL"</code>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <h3>POST /api/video/download</h3>
+                        <p>Tải xuống video với định dạng được chỉ định</p>
+                        <div class="code-block">
+                            <code>curl -X POST "http://localhost:3000/api/video/download" \
+-H "Content-Type: application/json" \
+-d '{"url": "VIDEO_URL", "format": "mp4"}'</code>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <h3>GET /health</h3>
+                        <p>Kiểm tra trạng thái server</p>
+                        <div class="code-block">
+                            <code>curl -X GET "http://localhost:3000/health"</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about" id="about">
+            <div class="section-content">
+                <h2 class="section-title">Giới Thiệu</h2>
+                <div class="about-content">
+                    <p>Video Downloader là công cụ tải video miễn phí, mạnh mẽ và dễ sử dụng. Chúng tôi hỗ trợ tải video từ hàng trăm trang web khác nhau với chất lượng cao nhất.</p>
+                    <div class="stats">
+                        <div class="stat">
+                            <h3>1M+</h3>
+                            <p>Video đã tải</p>
+                        </div>
+                        <div class="stat">
+                            <h3>500+</h3>
+                            <p>Website hỗ trợ</p>
+                        </div>
+                        <div class="stat">
+                            <h3>24/7</h3>
+                            <p>Hoạt động liên tục</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-download"></i>
+                    <span>VideoDownloader</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#privacy">Chính sách bảo mật</a>
+                    <a href="#terms">Điều khoản sử dụng</a>
+                    <a href="#contact">Liên hệ</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 VideoDownloader. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
