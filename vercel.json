@@ -1,15 +1,15 @@
 {
   "version": 2,
   "functions": {
-    "src/server.js": {
-      "runtime": "@vercel/node@4",
+    "api/index.js": {
+      "runtime": "@vercel/node@4.0.0",
       "maxDuration": 300
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/server.js"
+      "dest": "api/index.js"
     }
   ],
   "env": {
