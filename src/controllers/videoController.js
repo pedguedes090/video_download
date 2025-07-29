@@ -7,29 +7,27 @@ import http from 'http';
 
 export class VideoController {
   constructor() {
-    this.ytdlp = new YtDlp();
+    // Sử dụng yt-dlp từ hệ thống (đã cài qua apt-get)
+    this.ytdlp = new YtDlp({ binaryPath: '/usr/bin/yt-dlp' });
+
     this.fileCleanupTimers = new Map(); // Track cleanup timers
     this.thumbnailCache = new Map(); // Cache thumbnails with video ID
   }
 
-  // Helper method để tạo base URL từ request
   getBaseUrl(req) {
     const protocol = req.protocol || 'http';
     const host = req.get('host') || `localhost:${process.env.PORT || 3000}`;
     return `${protocol}://${host}`;
   }
 
-  // Helper method để tạo tên file ngẫu nhiên
   generateRandomFileName(originalExtension = 'mp4') {
     return `${randomUUID()}.${originalExtension}`;
   }
 
-  // Helper method để tạo video ID
   generateVideoId() {
     return randomUUID();
   }
 
-  // Helper method để download thumbnail
   async downloadThumbnail(thumbnailUrl, videoId) {
     return new Promise((resolve, reject) => {
       const protocol = thumbnailUrl.startsWith('https') ? https : http;
@@ -45,14 +43,12 @@ export class VideoController {
         response.on('end', () => {
           const buffer = Buffer.concat(chunks);
           
-          // Store in cache
           this.thumbnailCache.set(videoId, {
             buffer: buffer,
             contentType: response.headers['content-type'] || 'image/jpeg',
             timestamp: Date.now()
           });
           
-          // Schedule cleanup after 5 minutes
           setTimeout(() => {
             this.thumbnailCache.delete(videoId);
             console.log(`🗑️ Thumbnail cache cleaned for: ${videoId}`);
@@ -65,7 +61,6 @@ export class VideoController {
     });
   }
 
-  // Helper method để schedule file deletion
   scheduleFileDeletion(filePath, fileName) {
     const timerId = setTimeout(() => {
       try {
@@ -77,13 +72,12 @@ export class VideoController {
       } catch (error) {
         console.error(`❌ Error deleting file ${fileName}:`, error);
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
 
     this.fileCleanupTimers.set(fileName, timerId);
     console.log(`⏰ Scheduled deletion for file: ${fileName} in 5 minutes`);
   }
 
-  // Helper method để extract file size từ output
   extractFileSize(output) {
     try {
       const sizeMatch = output.match(/"total":"(\d+)"/);
@@ -95,12 +89,11 @@ export class VideoController {
         };
       }
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
 
-  // Helper method để format file size
   formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -109,15 +102,11 @@ export class VideoController {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // Get video information
   getInfo = async (req, res, next) => {
     try {
       const { url, flatPlaylist = true } = req.body;
-      
       console.log(`Getting info for: ${url}`);
-      
       const info = await this.ytdlp.getInfoAsync(url, { flatPlaylist });
-      
       res.json({
         success: true,
         data: info,
@@ -128,30 +117,19 @@ export class VideoController {
     }
   };
 
-  // Download video
   downloadVideo = async (req, res, next) => {
     try {
-      const { 
-        url, 
-        format = 'best', 
-        quality = 'highest'
-      } = req.body;
-
+      const { url, format = 'best', quality = 'highest' } = req.body;
       console.log(`Downloading video: ${url}`);
 
-      // Create downloads directory if it doesn't exist
       const downloadsDir = path.resolve('./downloads');
       if (!fs.existsSync(downloadsDir)) {
         fs.mkdirSync(downloadsDir, { recursive: true });
       }
 
-      // Get video info first to determine file extension and thumbnail
       const info = await this.ytdlp.getInfoAsync(url, { flatPlaylist: true });
-      
-      // Generate unique video ID
       const videoId = this.generateVideoId();
-      
-      // Download and cache thumbnail
+
       let thumbnailBrowserUrl = null;
       if (info.thumbnail) {
         try {
@@ -164,7 +142,6 @@ export class VideoController {
         }
       }
       
-      // Determine file extension based on format
       let extension = 'mp4';
       if (format === 'mp3' || (typeof format === 'object' && format.type === 'mp3')) {
         extension = 'mp3';
@@ -172,7 +149,6 @@ export class VideoController {
         extension = 'webm';
       }
 
-      // Generate random filename
       const randomFileName = this.generateRandomFileName(extension);
       const outputPath = path.join(downloadsDir, randomFileName);
 
@@ -199,7 +175,6 @@ export class VideoController {
         }
       };
 
-      // Add audio extraction for mp3
       if (format === 'mp3') {
         downloadOptions.extractAudio = true;
         downloadOptions.audioFormat = 'mp3';
@@ -208,15 +183,11 @@ export class VideoController {
 
       const result = await this.ytdlp.downloadAsync(url, downloadOptions);
 
-      // Check if file exists
       if (!fs.existsSync(outputPath)) {
         throw new Error('Download completed but file not found');
       }
 
-      // Get file stats
       const stats = fs.statSync(outputPath);
-      
-      // Schedule file deletion after 5 minutes
       this.scheduleFileDeletion(outputPath, randomFileName);
 
       const baseUrl = this.getBaseUrl(req);
@@ -226,7 +197,7 @@ export class VideoController {
         success: true,
         message: 'Video downloaded successfully',
         data: {
-          videoId: videoId,
+          videoId,
           fileName: randomFileName,
           originalTitle: info.title || 'Unknown Title',
           filePath: outputPath,
@@ -236,11 +207,11 @@ export class VideoController {
             bytes: stats.size,
             readable: this.formatFileSize(stats.size)
           },
-          browserUrl: browserUrl,
-          thumbnail: thumbnailBrowserUrl || info.thumbnail, // Use browserUrl for thumbnail if available
-          thumbnailBrowserUrl: thumbnailBrowserUrl,
+          browserUrl,
+          thumbnail: thumbnailBrowserUrl || info.thumbnail,
+          thumbnailBrowserUrl,
           duration: info.duration || null,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes from now
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
         },
         rawOutput: result
       });
@@ -249,11 +220,9 @@ export class VideoController {
     }
   };
 
-  // Stream video
   streamVideo = async (req, res, next) => {
     try {
       const { url, format = 'best' } = req.query;
-
       console.log(`Streaming video: ${url}`);
 
       let formatOptions;
@@ -274,26 +243,19 @@ export class VideoController {
         }
       });
 
-      // Set appropriate headers
       res.setHeader('Content-Type', 'video/mp4');
       res.setHeader('Content-Disposition', 'inline');
-
-      // Pipe the stream to response
       await stream.pipeAsync(res);
     } catch (error) {
       next(error);
     }
   };
 
-  // Get thumbnails
   getThumbnails = async (req, res, next) => {
     try {
       const { url } = req.body;
-      
       console.log(`Getting thumbnails for: ${url}`);
-      
       const thumbnails = await this.ytdlp.getThumbnailsAsync(url);
-      
       res.json({
         success: true,
         data: thumbnails,
@@ -304,41 +266,30 @@ export class VideoController {
     }
   };
 
-  // Get thumbnail image via browserUrl
   getThumbnailImage = async (req, res, next) => {
     try {
       const { videoId } = req.params;
-      
       const cachedThumbnail = this.thumbnailCache.get(videoId);
-      
       if (!cachedThumbnail) {
         return res.status(404).json({
           success: false,
           error: 'Thumbnail not found or expired'
         });
       }
-      
-      // Set appropriate headers
       res.setHeader('Content-Type', cachedThumbnail.contentType);
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+      res.setHeader('Cache-Control', 'public, max-age=300');
       res.setHeader('Content-Length', cachedThumbnail.buffer.length);
-      
-      // Send the thumbnail
       res.send(cachedThumbnail.buffer);
     } catch (error) {
       next(error);
     }
   };
 
-  // Get title
   getTitle = async (req, res, next) => {
     try {
       const { url } = req.body;
-      
       console.log(`Getting title for: ${url}`);
-      
       const title = await this.ytdlp.getTitleAsync(url);
-      
       res.json({
         success: true,
         data: { title }
@@ -348,51 +299,37 @@ export class VideoController {
     }
   };
 
-  // Get file without saving
   getFile = async (req, res, next) => {
     try {
-      const { 
-        url, 
-        format = { filter: 'audioandvideo', quality: 'highest', type: 'mp4' },
-        filename 
-      } = req.body;
-
+      const { url, format = { filter: 'audioandvideo', quality: 'highest', type: 'mp4' }, filename } = req.body;
       console.log(`Getting file for: ${url}`);
 
       const file = await this.ytdlp.getFileAsync(url, {
-        format: format,
-        filename: filename,
+        format,
+        filename,
         onProgress: (progress) => {
           console.log(`File progress: ${progress.percent}%`);
         }
       });
 
-      // Set appropriate headers for file download
       res.setHeader('Content-Type', file.type || 'video/mp4');
       res.setHeader('Content-Length', file.size);
       res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-
-      // Send the file buffer
       res.send(Buffer.from(await file.arrayBuffer()));
     } catch (error) {
       next(error);
     }
   };
 
-  // Check installation
   checkInstallation = async (req, res, next) => {
     try {
-      // Kiểm tra ytdlp trước
       const ytdlpInstalled = await this.ytdlp.checkInstallationAsync({ ffmpeg: false });
-      
       let ffmpegInstalled = false;
       try {
         ffmpegInstalled = await this.ytdlp.checkInstallationAsync({ ffmpeg: true });
       } catch (error) {
-        // FFmpeg không bắt buộc cho tính năng cơ bản
         console.log('FFmpeg check failed:', error.message);
       }
-      
       res.json({
         success: true,
         data: {
@@ -406,11 +343,9 @@ export class VideoController {
     }
   };
 
-  // List downloaded files
   listDownloads = async (req, res, next) => {
     try {
       const downloadsDir = path.resolve('./downloads');
-      
       if (!fs.existsSync(downloadsDir)) {
         return res.json({
           success: true,
@@ -421,7 +356,6 @@ export class VideoController {
           }
         });
       }
-
       const files = fs.readdirSync(downloadsDir);
       const baseUrl = this.getBaseUrl(req);
       const fileDetails = files.map(file => {
@@ -439,7 +373,6 @@ export class VideoController {
           browserUrl: `${baseUrl}/downloads/${encodeURIComponent(file)}`
         };
       });
-
       res.json({
         success: true,
         data: {
