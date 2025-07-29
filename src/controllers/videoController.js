@@ -4,9 +4,7 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 import https from 'https';
 import http from 'http';
-import YTDlpWrap from "ytdlp-nodejs";
 
-const ytDlp = new YTDlpWrap("/usr/bin/yt-dlp");
 export class VideoController {
   constructor() {
     this.ytdlp = new YtDlp();
